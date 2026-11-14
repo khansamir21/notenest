@@ -12,7 +12,7 @@ const HomePage = () => {
 
   // Backend API se notes fetch karne ke liye useEffect
   useEffect(() => {
-    fetch('http://localhost:5000/api/notes')
+    fetch('https://notenest-klt3.onrender.com/api/notes')
       .then((res) => res.json())
       .then((data) => {
         setPublicNotes(data);

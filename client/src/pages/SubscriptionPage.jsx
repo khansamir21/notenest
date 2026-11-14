@@ -39,7 +39,7 @@ const SubscriptionPage = () => {
 
     try {
       // 2. Backend se Order Create karwaye
-      const orderResponse = await fetch('http://localhost:5000/api/payment/create-order', {
+      const orderResponse = await fetch('https://notenest-klt3.onrender.com/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId }),
@@ -54,7 +54,7 @@ const SubscriptionPage = () => {
 
       // 3. Razorpay Checkout Options Configure karein
       const options = {
-        key: "rzp_test_TyixONKsOhlda5", // ⚠️ Yahan apni asli Razorpay Test Key ID dalein (jaise rzp_test_xxxxxx)
+        key: "rzp_test_TyixONKsOhlda5", // Razorpay Test Key ID
         amount: order.amount,
         currency: order.currency,
         name: "NoteNest",
@@ -63,7 +63,7 @@ const SubscriptionPage = () => {
         handler: async function (response) {
           // 4. Payment successful hone ke baad verification ke liye backend bhejein
           try {
-            const verifyRes = await fetch('http://localhost:5000/api/payment/verify', {
+            const verifyRes = await fetch('https://notenest-klt3.onrender.com/api/payment/verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

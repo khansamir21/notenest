@@ -60,7 +60,7 @@ const UploadNotePage = () => {
     data.append('uploader', currentUser.name); // 👈 Backend limit check ke liye zaroori
 
     try {
-      const response = await fetch('http://localhost:5000/api/notes', {
+      const response = await fetch('https://notenest-klt3.onrender.com/api/notes', {
         method: 'POST',
         body: data,
       });

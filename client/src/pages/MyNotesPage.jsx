@@ -19,7 +19,7 @@ const MyNotesPage = () => {
       return;
     }
 
-    fetch(`http://localhost:5000/api/notes/mynotes?uploader=${encodeURIComponent(storedUser.name)}`)
+    fetch(`https://notenest-klt3.onrender.com/api/notes/mynotes?uploader=${encodeURIComponent(storedUser.name)}`)
       .then((res) => res.json())
       .then((data) => {
         setMyNotes(data);
@@ -36,7 +36,7 @@ const MyNotesPage = () => {
     if (!window.confirm('Are you sure you want to delete this note?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/notes/${id}`, {
+      const response = await fetch(`https://notenest-klt3.onrender.com/api/notes/${id}`, {
         method: 'DELETE',
       });
 

@@ -20,7 +20,7 @@ const ProfilePage = () => {
     setUser(parsedUser);
 
     // User ke uploaded notes fetch karke count dikhane ke liye
-    fetch('http://localhost:5000/api/notes')
+    fetch('https://notenest-klt3.onrender.com/api/notes')
       .then((res) => res.json())
       .then((data) => {
         // Agar uploader name match karta hai toh count badhayein
@@ -58,7 +58,7 @@ const ProfilePage = () => {
                 <Mail size={14} /> {user.email}
               </p>
               <div className="inline-flex items-center space-x-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full mt-2">
-                <ShieldCheck size={14} />
+                <ShieldCheck size= {14} />
                 <span>Active Account</span>
               </div>
             </div>
