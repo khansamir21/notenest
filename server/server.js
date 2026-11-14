@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/notenest')
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/notenest')
   .then(() => console.log('MongoDB Connected Successfully'))
   .catch((err) => console.log('Database connection error: ', err));
 
@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
 });
 
 const Note = require('./models/Note');
-const User = require('./models/User'); // User model import kiya
+const User = require('./models/User');
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -56,7 +56,7 @@ app.get('/api/notes', async (req, res) => {
   }
 });
 
-// 2. Add a new note (✨ 5 Notes Free Limit Check Added Here)
+// 2. Add a new note
 app.post('/api/notes', upload.single('file'), async (req, res) => {
   try {
     const { title, category, isPublic, description, uploader } = req.body;
@@ -65,12 +65,11 @@ app.post('/api/notes', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'Please attach a document file!' });
     }
 
-    // Check user upload limit if uploader name is provided
     if (uploader) {
       const user = await User.findOne({ name: uploader });
       if (user) {
         const userNotesCount = await Note.countDocuments({ uploader });
-        const limit = user.uploadLimit || 5; // Default free limit 5 notes
+        const limit = user.uploadLimit || 5;
 
         if (userNotesCount >= limit) {
           return res.status(403).json({ 
@@ -80,7 +79,8 @@ app.post('/api/notes', upload.single('file'), async (req, res) => {
       }
     }
 
-    const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    // ✨ Fixed: Dynamic URL for Render & Localhost both
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     const fileExtension = path.extname(req.file.originalname).substring(1).toUpperCase();
 
     const newNote = new Note({
@@ -118,7 +118,7 @@ app.delete('/api/notes/:id', async (req, res) => {
 
 // ================= USER AUTHENTICATION & SUBSCRIPTION ROUTES ================= //
 
-// 4. Signup Route (Register new user with default 5 limit)
+// 4. Signup Route
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { name, email, gender, country, password } = req.body;
@@ -135,7 +135,7 @@ app.post('/api/auth/signup', async (req, res) => {
       country, 
       password,
       isSubscribed: false,
-      uploadLimit: 5 // Default free upload limit
+      uploadLimit: 5
     });
     
     await newUser.save();
@@ -172,15 +172,15 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ================= RAZORPAY PAYMENT ROUTES (✨ Naya Added) ================= //
+// ================= RAZORPAY PAYMENT ROUTES ================= //
 
 // 6. Create Razorpay Order Route
 app.post('/api/payment/create-order', async (req, res) => {
   try {
     const { planId } = req.body;
-    let amount = 299 * 100; // Pro 20 (₹299 in paise)
-    if (planId === 'pro50') amount = 599 * 100; // Pro 50 (₹599 in paise)
-    if (planId === 'lifetime') amount = 999 * 100; // Lifetime (₹999 in paise)
+    let amount = 299 * 100;
+    if (planId === 'pro50') amount = 599 * 100;
+    if (planId === 'lifetime') amount = 999 * 100;
 
     const options = {
       amount: amount,
@@ -195,10 +195,10 @@ app.post('/api/payment/create-order', async (req, res) => {
   }
 });
 
-// ✨ NAYA ROUTE: Get only logged-in user's notes (My Notes)
+// Get user's notes
 app.get('/api/notes/mynotes', async (req, res) => {
   try {
-    const { uploader } = req.query; // Frontend se user ka name pass hoga
+    const { uploader } = req.query;
     const notes = await Note.find({ uploader }).sort({ createdAt: -1 });
     res.json(notes);
   } catch (err) {
@@ -218,14 +218,15 @@ app.post('/api/payment/verify', async (req, res) => {
       .digest("hex");
 
     if (expectedSign === razorpay_signature) {
-      let extraLimit = 25; // Pro 20 (5 free + 20 extra)
-      if (planId === 'pro50') extraLimit = 55; // Pro 50 (5 free + 50 extra)
-      if (planId === 'lifetime') extraLimit = 999999; // Unlimited
+      let extraLimit = 25;
+      if (planId === 'pro50') extraLimit = 55;
+      if (planId === 'lifetime') extraLimit = 999999;
 
+      // ✨ Fixed: Corrected { new: true } instead of { new: time => true }
       const user = await User.findOneAndUpdate(
         { email }, 
         { isSubscribed: true, uploadLimit: extraLimit }, 
-        { new: time => true }
+        { new: true }
       );
 
       if (!user) return res.status(404).json({ error: 'User not found' });
@@ -247,7 +248,6 @@ app.post('/api/payment/verify', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// ============================================================================ //
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
